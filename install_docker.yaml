@@ -1,0 +1,53 @@
+---
+- name: Install Docker
+  hosts: all
+  become: true
+  
+  tasks:
+  - name: Set Fedora based
+    block:
+      - name: Add repo
+        yum_repository:
+          name: Docker
+          baseurl: https://download.docker.com/linux/fedora/$releasever/$basearch/stable
+          description: Docker
+          gpgkey: https://download.docker.com/linux/fedora/gpg
+          state: present
+      - name:
+        yum:
+          name: docker-ce
+          state: present
+    when: ansible_facts['distribution'] == "Fedora"
+  
+  - name: Set Debian based 
+    block:
+      - name: Install packages
+        apt:
+          name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          update_cache: true
+          state: present
+      - name: Add Docker GPG apt Key
+        apt_key:
+          url: https://download.docker.com/linux/ubuntu/gpg
+          state: present
+
+      - name: Add Docker Repository
+        apt_repository:
+          repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+          state: present
+
+      - name: install Docker
+        apt:
+          name: docker-ce
+          state: present 
+    when: ansible_facts['distribution'] == "Ubuntu"
+  
+  - name: Enable Docker as service
+    service:
+      name: docker
+      state: restarted
+      enabled: yes
